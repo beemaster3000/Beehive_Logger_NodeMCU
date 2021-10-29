@@ -34,12 +34,8 @@ short int nSamples;                // Counter for averaging values every logging
 short int recordNumber;            // Current record number
 
 // Multiplexer
-#define MX_SIG_PIN 8  // SIG pin  connected to the DHT sensors
-#define MX_EN_PIN 7   // Enable pin 
-#define MX_CTRL_PIN_0 3
-#define MX_CTRL_PIN_1 4
-#define MX_CTRL_PIN_2 5
-#define MX_CTRL_PIN_3 6
+#define MX_SIG_PIN D0  // SIG pin  connected to the DHT sensors
+#define MX_EN_PIN  D4  // Enable pin 
 const int short s0[16] PROGMEM={0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1};
 const int short s1[16] PROGMEM={0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1};
 const int short s2[16] PROGMEM={0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1};
@@ -80,6 +76,10 @@ void channelControl(int MX_Channel)
     digitalWrite(MX_CTRL_PIN_2, pgm_read_word_near(s2 + MX_Channel));
     digitalWrite(MX_CTRL_PIN_3, pgm_read_word_near(s3 + MX_Channel));
 };
+
+
+
+
 //------------------------------------------------------------------------------
 // Serial print sampeling data
 void printSensorData(int MX_Channel, float t, float h)
