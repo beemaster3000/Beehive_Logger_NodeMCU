@@ -33,9 +33,11 @@ float battVolt_cumul;              // Cumulative battery Voltage for averageing 
 short int nSamples;                // Counter for averaging values every logging_interval, stored on SD card
 short int recordNumber;            // Current record number
 
-// Multiplexer
+// 74HC595 and Multiplexer
 #define MX_SIG_PIN D0  // SIG pin  connected to the DHT sensors
-#define MX_EN_PIN  D4  // Enable pin 
+const uint8_t OSRDataPin =  D3;   // connected to 74HC595 SER pin
+const uint8_t OSRLatchPin = D4;   // connected to 74HC595 RCLK pin
+const uint8_t OSRClockPin = D10;  // connected to 74HC595 SRCLK pin (TX pin ok for output)
 const int short s0[16] PROGMEM={0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1};
 const int short s1[16] PROGMEM={0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1};
 const int short s2[16] PROGMEM={0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1};
@@ -52,7 +54,7 @@ RTC_DS3231 rtc;
 
 // OLED display module
 DisplayOLED display;
-#define BUTTON_PIN 2    // the number of the pushbutton pin
+#define BUTTON_PIN D9        // the number of the pushbutton pin (RX pin ok for input)
 int short buttonState= 0;    // variable for reading the pushbutton status
 
 
@@ -69,15 +71,55 @@ char fileName[13] = "Data00.csv";
 
 //------------------------------------------------------------------------------
 // MX channel selection
+void osrWriteRegister(uint8_t outputs) 
+{
+   // Initiate latching process, next HIGH latches data
+   digitalWrite(OSRLatchPin, LOW);
+   // Shift output data into the shift register, most significant bit first
+   shiftOut(OSRDataPin, OSRClockPin, MSBFIRST, outputs);
+   // Latch outputs into the shift register
+   digitalWrite(OSRLatchPin, HIGH);
+}
+
+void osrDigitalWrite(uint8_t pin, uint8_t value) 
+{
+   static uint8_t outputs = 0;  // retains shift register output values
+   if (value == HIGH) bitSet(outputs, pin);  // set output pin to HIGH
+   else if (value == LOW) bitClear(outputs, pin);  // set output pin to LOW
+   osrWriteRegister(outputs);  // write all outputs to shift register
+}
+
 void channelControl(int MX_Channel)
 {
-    digitalWrite(MX_CTRL_PIN_0, pgm_read_word_near(s0 + MX_Channel));
-    digitalWrite(MX_CTRL_PIN_1, pgm_read_word_near(s1 + MX_Channel));
-    digitalWrite(MX_CTRL_PIN_2, pgm_read_word_near(s2 + MX_Channel));
-    digitalWrite(MX_CTRL_PIN_3, pgm_read_word_near(s3 + MX_Channel));
-};
+   const uint8_t MX_S0 = 0;
+   const uint8_t MX_S1 = 1;
+   const uint8_t MX_S2 = 2;
+   const uint8_t MX_S3 = 3;
+   const uint8_t MX_EN = 4;  // Kept low for MX to be ON
+   uint8_t outputs     = 0;  // holds shift register output values
 
-
+  if (pgm_read_word_near(s0 + MX_Channel)==1)
+  {
+    bitSet(outputs, MX_S0);
+  }
+  if (pgm_read_word_near(s1 + MX_Channel)==1)
+  {
+    bitSet(outputs, MX_S1);
+  }
+  if (pgm_read_word_near(s2 + MX_Channel)==1)
+  {
+    bitSet(outputs, MX_S2);
+  }  
+  if (pgm_read_word_near(s3 + MX_Channel)==1)
+  {
+    bitSet(outputs, MX_S3);
+  }
+  if (MX_Channel == -1) // if input is -1 set MX_EN to HIGH to turn off MX
+  {
+    bitSet(outputs, MX_EN);
+  }
+  osrWriteRegister(outputs); //send new instructions to 74HC595
+}
 
 
 //------------------------------------------------------------------------------
@@ -240,17 +282,11 @@ void setup()
     Serial.println(F(" min"));
   }
   
-  //// multiplexer
-  pinMode(MX_CTRL_PIN_0, OUTPUT); // set pin as output
-  pinMode(MX_CTRL_PIN_1, OUTPUT); 
-  pinMode(MX_CTRL_PIN_2, OUTPUT); 
-  pinMode(MX_CTRL_PIN_3, OUTPUT);  
-  digitalWrite(MX_CTRL_PIN_0, HIGH); // set initial state as HIGH
-  digitalWrite(MX_CTRL_PIN_1, HIGH);
-  digitalWrite(MX_CTRL_PIN_2, HIGH);
-  digitalWrite(MX_CTRL_PIN_3, HIGH);
-  pinMode(MX_EN_PIN, OUTPUT);         // set EN pin as output
-  digitalWrite(MX_EN_PIN, HIGH);      // set EN in (enable pin) HIGH to disable chip   
+  //// multiplexer / 74HC595 shift register
+   pinMode(OSRDataPin, OUTPUT);
+   pinMode(OSRLatchPin, OUTPUT);
+   pinMode(OSRClockPin, OUTPUT);
+   channelControl(-1); // set EN in (enable pin) HIGH to disable chip
 
   //// TRH sensor
   dht.begin();
@@ -349,7 +385,6 @@ void loop()
     rtc.setAlarm1(now + TimeSpan(0,0,0,sampeling_interval), DS3231_A1_Second);
 
     // Multiplexer activation and sensor reading
-    digitalWrite(MX_EN_PIN, LOW); // enable mx chip
     for(int short i=0; i<nSensor; i++)
     {
       channelControl(i);
@@ -381,7 +416,7 @@ void loop()
     nSamples++;
     // display.clear();
 
-    digitalWrite(MX_EN_PIN, HIGH); // disable mx chip
+    channelControl(-1);  // disable mx chip
   }
 }
 //===========================================================================================
