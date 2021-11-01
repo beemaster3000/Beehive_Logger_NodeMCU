@@ -21,6 +21,7 @@ public:
 	void drawWelcomeScreen();
 	void printTRHvalues(int short sensorNumber, float t, float h);
 	void printMainPage(char filename[13],float battVolt,char dateTime[20]);
+	void println(const char *s,int lineNumber);
 
 private:
 	U8G2_SSD1306_128X64_NONAME_1_HW_I2C u8g2_ = U8G2_SSD1306_128X64_NONAME_1_HW_I2C(U8G2_R0, U8X8_PIN_NONE);

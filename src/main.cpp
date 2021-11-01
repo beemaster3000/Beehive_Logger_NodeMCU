@@ -21,7 +21,7 @@
 #define sampeling_interval 30      // sampeling period in s (CAN NOT BE LESS THAN (nsensors)+1*2sec)
 #define nSensor 11                 // Number of T/RH sensors to sample from
 #define subsample_delay 2000       // Delay between each RTC sensors reading in ms
-#define BATTVOLT_PIN A0           // Analog pin used to measure battery voltage divider from 12v battery to analog input (R1+R2)/R2
+#define BATTVOLT_PIN A0            // Analog pin used to measure battery voltage divider from 12v battery to analog input (R1+R2)/R2
 #define BATTVOLT_R1 9.79           // Value of R1 in kohm recorded with voltmeter (9.79 original val)
 #define BATTVOLT_R2 0.984          // Value of R2 in kohm recorded with voltmeter (0.981 original val)
 float T;                           // Variable containing Temperature (degC) sensor readings each loop
@@ -54,6 +54,7 @@ RTC_DS3231 rtc;
 
 // OLED display module
 DisplayOLED display;
+int short setupLine;         // Line number for setup
 #define BUTTON_PIN D0        // the number of the pushbutton pin (RX pin ok for input)
 int short buttonState= 0;    // variable for reading the pushbutton status
 
@@ -214,12 +215,20 @@ void setup()
   //// OLED display module (welcome screen)
   display.setup();
   display.drawWelcomeScreen();
+  delay(int(2000));
+  display.clear();
+  // display.println("test line 1",1);
+  // display.println("test line 2",2);
+  // display.println("test line 3",3);
+  // delay(int(6000));
+
   pinMode(BUTTON_PIN,INPUT_PULLUP); // initialize the pushbutton pin as an input:
 
   //// general
   Serial.begin(115200);
   // analogReference(INTERNAL); // kept here for future use with resistances providing no more than 1.1V
   Serial.println(F("Program has started"));
+
   recordNumber=1;
 
   //// RTC

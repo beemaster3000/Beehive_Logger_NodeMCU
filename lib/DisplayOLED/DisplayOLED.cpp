@@ -108,11 +108,12 @@ void DisplayOLED::setup()
 {   
     u8g2_.begin();
     // u8g2_.setFont(u8g2_font_helvR12_tr); // helvetica
-    u8g2_.setFont(u8g2_font_helvB12_tr); // bold helvetica
+    u8g2_.setFont(u8g2_font_helvB12_tr); // bold helvetica **
     // u8g2_.setFont(u8g2_font_crox3c_tr);  // add b after h or c for bold 
     // u8g2_.setFont(u8g2_font_crox3h_tr);  // add b after h or c for bold %
     // u8g2_.setFont(u8g2_font_crox1h_tr);  // add b after h or c for bold
-    // u8g2_.setFont(u8g2_font_10x20_tr); 
+    // u8g2_.setFont(u8g2_font_10x20_tr);
+    // u8g2_.setFont(u8g2_font_helvR08_tr); // helvetica 8
 }
 
 void DisplayOLED::clear()
@@ -167,3 +168,12 @@ void DisplayOLED::printMainPage(char filename[13],float battVolt,char dateTime[2
         u8g2_.println(F(" V"));
     } while ( u8g2_.nextPage() );
 }
+
+void DisplayOLED::println(const char *textIn,int lineNumber)
+{
+    int lineht;  
+    lineht = 12;
+    u8g2_.setCursor(0,lineht*lineNumber);
+    u8g2_.print(textIn);
+    u8g2_.updateDisplay();
+} 
