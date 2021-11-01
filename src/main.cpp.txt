@@ -8,6 +8,7 @@
 #include "DHT.h"
 #include <SPI.h>
 #include <avr/pgmspace.h>
+#include <MCP23017.h>
 
 // Local Libs
 #include "SdFat.h"
@@ -33,15 +34,20 @@ float battVolt_cumul;              // Cumulative battery Voltage for averageing 
 short int nSamples;                // Counter for averaging values every logging_interval, stored on SD card
 short int recordNumber;            // Current record number
 
-// 74HC595 and Multiplexer
-#define MX_SIG_PIN D9  // SIG pin  connected to the DHT sensors
-const uint8_t OSRDataPin =  D3;   // connected to 74HC595 SER pin (leg 13 OE)
-const uint8_t OSRLatchPin = D4;   // connected to 74HC595 RCLK pin (leg 12 RCLK)
-const uint8_t OSRClockPin = D10;  // connected to 74HC595 SRCLK pin (leg 11 SRCLK) (TX pin ok for output)
+// Multiplexer
+#define MX_SIG_PIN D4  // SIG pin  connected to the DHT sensors
 const int short s0[16] PROGMEM={0,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1};
 const int short s1[16] PROGMEM={0,0,1,1,0,0,1,1,0,0,1,1,0,0,1,1};
 const int short s2[16] PROGMEM={0,0,0,0,1,1,1,1,0,0,0,0,1,1,1,1};
 const int short s3[16] PROGMEM={0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,1};
+
+#define MCP23017_I2C_ADDRESS 0x20     // I2C address of the MCP23017 IC
+const uint8_t MX_CTRL_PIN_0 = 0;      // GPA0 (21) of the MCP23017
+const uint8_t MX_CTRL_PIN_1 = 1;      // GPA1 (22) of the MCP23017
+const uint8_t MX_CTRL_PIN_2 = 2;      // GPA2 (23) of the MCP23017
+const uint8_t MX_CTRL_PIN_3 = 3;      // GPA3 (24) of the MCP23017
+const uint8_t MX_EN_PIN = 4;          // GPA4 (25) of the MCP23017A Enable pin 
+MCP23017 mcp23017 = MCP23017(MCP23017_I2C_ADDRESS);  // instance of the connected MCP23017 IC
 
 // DHT
 // #define DHT_PIN 2     // Digital pin connected to the DHT sensor (same as MX_SIG_PIN)
@@ -55,7 +61,7 @@ RTC_DS3231 rtc;
 // OLED display module
 DisplayOLED display;
 int short setupLine;         // Line number for setup
-#define BUTTON_PIN D0        // the number of the pushbutton pin (RX pin ok for input)
+#define BUTTON_PIN 5        // the number of the pushbutton pin (RX pin ok for input)
 int short buttonState= 0;    // variable for reading the pushbutton status
 
 
@@ -72,54 +78,24 @@ char fileName[13] = "Data00.csv";
 
 //------------------------------------------------------------------------------
 // MX channel selection
-void osrWriteRegister(uint8_t outputs) 
-{
-   // Initiate latching process, next HIGH latches data
-   digitalWrite(OSRLatchPin, LOW);
-   // Shift output data into the shift register, most significant bit first
-   shiftOut(OSRDataPin, OSRClockPin, MSBFIRST, outputs);
-   // Latch outputs into the shift register
-   digitalWrite(OSRLatchPin, HIGH);
-}
 
-void osrDigitalWrite(uint8_t pin, uint8_t value) 
+void configuremcp23017Pins() 
 {
-   static uint8_t outputs = 0;  // retains shift register output values
-   if (value == HIGH) bitSet(outputs, pin);  // set output pin to HIGH
-   else if (value == LOW) bitClear(outputs, pin);  // set output pin to LOW
-   osrWriteRegister(outputs);  // write all outputs to shift register
+   // Configure output pins
+   mcp23017.pinMode(MX_CTRL_PIN_0, OUTPUT);
+   mcp23017.pinMode(MX_CTRL_PIN_1, OUTPUT);
+   mcp23017.pinMode(MX_CTRL_PIN_2, OUTPUT);
+   mcp23017.pinMode(MX_CTRL_PIN_3, OUTPUT);
+   mcp23017.pinMode(MX_EN_PIN, OUTPUT);
+   mcp23017.pinMode(BUTTON_PIN, INPUT_PULLUP, true);   // initialize the pushbutton pin as an input
 }
 
 void channelControl(int MX_Channel)
 {
-   const uint8_t MX_S0 = 1;
-   const uint8_t MX_S1 = 2;
-   const uint8_t MX_S2 = 3;
-   const uint8_t MX_S3 = 4;
-   const uint8_t MX_EN = 0;  // Kept LOW for MX to be ON
-   uint8_t outputs     = 0;  // holds shift register output values
-
-  if (pgm_read_word_near(s0 + MX_Channel)==1)
-  {
-    bitSet(outputs, MX_S0);
-  }
-  if (pgm_read_word_near(s1 + MX_Channel)==1)
-  {
-    bitSet(outputs, MX_S1);
-  }
-  if (pgm_read_word_near(s2 + MX_Channel)==1)
-  {
-    bitSet(outputs, MX_S2);
-  }  
-  if (pgm_read_word_near(s3 + MX_Channel)==1)
-  {
-    bitSet(outputs, MX_S3);
-  }
-  if (MX_Channel == -1) // if input is -1 set MX_EN to HIGH to turn off MX
-  {
-    bitSet(outputs, MX_EN);
-  }
-  osrWriteRegister(outputs); //send new instructions to 74HC595
+    mcp23017.digitalWrite(MX_CTRL_PIN_0, pgm_read_word_near(s0 + MX_Channel));
+    mcp23017.digitalWrite(MX_CTRL_PIN_1, pgm_read_word_near(s1 + MX_Channel));
+    mcp23017.digitalWrite(MX_CTRL_PIN_2, pgm_read_word_near(s2 + MX_Channel));
+    mcp23017.digitalWrite(MX_CTRL_PIN_3, pgm_read_word_near(s3 + MX_Channel));
 }
 
 
@@ -217,12 +193,6 @@ void setup()
   display.drawWelcomeScreen();
   delay(int(2000));
   display.clear();
-  // display.println("test line 1",1);
-  // display.println("test line 2",2);
-  // display.println("test line 3",3);
-  // delay(int(6000));
-
-  pinMode(BUTTON_PIN,INPUT_PULLUP); // initialize the pushbutton pin as an input:
 
   //// general
   Serial.begin(115200);
@@ -292,11 +262,9 @@ void setup()
     Serial.println(F(" min"));
   }
   
-  // // multiplexer / 74HC595 shift register
-   pinMode(OSRDataPin, OUTPUT);
-   pinMode(OSRLatchPin, OUTPUT);
-   pinMode(OSRClockPin, OUTPUT);
-   channelControl(-1); // set EN in (enable pin) HIGH to disable chip
+  //// multiplexer
+  configuremcp23017Pins(); 
+  mcp23017.digitalWrite(MX_EN_PIN, LOW); // enable mx chip
 
   //// TRH sensor
   dht.begin();
@@ -341,7 +309,8 @@ void setup()
 //===========================================================================================
 void loop()
 {
-  buttonState = digitalRead(BUTTON_PIN);
+  // Screen On Off subroutine (Main Screen)
+  buttonState = mcp23017.digitalRead(BUTTON_PIN);
   if (buttonState==LOW)
   {
     DateTime now = rtc.now();
@@ -352,7 +321,7 @@ void loop()
     display.clear();
   }
   
-
+  // Sample and log alarm control
   if (rtc.alarmFired(2) == true)
   {
     // Reset Logging and sampeling alarms
@@ -406,7 +375,7 @@ void loop()
       printSensorData(i, T, RH);
 
       // Display data on OLED screen
-      buttonState = digitalRead(BUTTON_PIN);
+      buttonState = mcp23017.digitalRead(BUTTON_PIN);
       if (buttonState==LOW)
       {
         display.printTRHvalues(i+1,T,RH);
@@ -415,7 +384,6 @@ void loop()
         display.clear();
       }
       
-
       // Add values to cumulative arrays
       T_cumulTable[i]=T_cumulTable[i]+T;
       RH_cumulTable[i]=RH_cumulTable[i]+RH;
@@ -426,8 +394,6 @@ void loop()
     battVolt_cumul=battVolt_cumul+battVolt;
     nSamples++;
     // display.clear();
-
-    channelControl(-1);  // disable mx chip
   }
 }
 //===========================================================================================
