@@ -20,7 +20,7 @@ const uint8_t MX_CTRL_PIN_3 = 3;      // GPA3 (24) of the MCP23017
 const uint8_t MX_EN_PIN = 4;          // GPA4 (25) of the MCP23017A Enable pin 
 MCP23017 mcp23017 = MCP23017(MCP23017_I2C_ADDRESS);  // instance of the connected MCP23017 IC
 
-#define BUTTON_PIN 5        // the number of the pushbutton pin (RX pin ok for input)
+#define BUTTON_PIN 7        // the number of the pushbutton pin, GPA4 (28) of the MCP23017A Enable pin 
 short int delayms;          // delay between MX port switches
 int short buttonState= 0;   // variable for reading the pushbutton status
 
