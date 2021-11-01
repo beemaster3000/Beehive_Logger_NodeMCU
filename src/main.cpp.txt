@@ -61,7 +61,7 @@ RTC_DS3231 rtc;
 // OLED display module
 DisplayOLED display;
 int short setupLine;         // Line number for setup
-#define BUTTON_PIN 5        // the number of the pushbutton pin (RX pin ok for input)
+#define BUTTON_PIN 7        // the number of the pushbutton pin, GPA4 (28) of the MCP23017A Enable pin 
 int short buttonState= 0;    // variable for reading the pushbutton status
 
 
