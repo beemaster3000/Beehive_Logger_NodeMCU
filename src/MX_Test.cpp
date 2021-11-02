@@ -53,7 +53,10 @@ void channelControl(int MX_Channel)
 // ------------------------------- Initializing Arduino start -------------------------------
 //===========================================================================================
 void setup() 
-{  
+{ 
+  Wire.begin();     // initialize I2C serial bus
+  Serial.begin(115200);
+  Serial.println("Program Started");
   //// multiplexer
   configuremcp23017Pins(); 
   mcp23017.digitalWrite(MX_EN_PIN, LOW); // enable mx chip
@@ -64,18 +67,31 @@ void setup()
 //===========================================================================================
 void loop()
 {
-  buttonState = mcp23017.digitalRead(BUTTON_PIN);
-  if (buttonState==LOW)
-  {
-    delayms = 50;
-  }else
-  {
-    delayms = 500;
-  }
-
   for(int short i=0; i<16; i++)
   {
+    buttonState = mcp23017.digitalRead(BUTTON_PIN);
+    if (buttonState==LOW)
+    {
+      delayms = 10;
+    }else
+    {
+      delayms = 1000;
+    }
+
+    Serial.print("mx chanel : ");
+    Serial.print(i);
+    Serial.print(" mx input : ");
+    Serial.print(pgm_read_word_near(s0 + i));
+    Serial.print("     ");
+    Serial.print(pgm_read_word_near(s1 + i));
+    Serial.print("     ");
+    Serial.print(pgm_read_word_near(s2 + i));
+    Serial.print("     ");
+    Serial.println(pgm_read_word_near(s3 + i));
+
     channelControl(i);
+    mcp23017.digitalWrite(MX_EN_PIN, LOW); // enable mx chip
     delay(delayms);
+    mcp23017.digitalWrite(MX_EN_PIN, HIGH); // enable mx chip
   }
 }
