@@ -50,7 +50,7 @@ const uint8_t MX_EN_PIN = 4;          // GPA4 (25) of the MCP23017A Enable pin
 MCP23017 mcp23017 = MCP23017(MCP23017_I2C_ADDRESS);  // instance of the connected MCP23017 IC
 
 // DHT
-// #define DHT_PIN 2     // Digital pin connected to the DHT sensor (same as MX_SIG_PIN)
+// #define DHT_PIN D2     // Digital pin connected to the DHT sensor (same as MX_SIG_PIN)
 #define DHT_TYPE DHT11   // DHT 11
 DHT dht(MX_SIG_PIN, DHT_TYPE);
 
@@ -60,9 +60,11 @@ RTC_DS3231 rtc;
 
 // OLED display module
 DisplayOLED display;
-int short setupLine;         // Line number for setup
-#define BUTTON_PIN 7        // the number of the pushbutton pin, GPA4 (28) of the MCP23017A Enable pin 
-int short buttonState= 0;    // variable for reading the pushbutton status
+// #define BUTTON_PIN 7         // the number of the pushbutton pin, GPA4 (28) of the MCP23017A Enable pin 
+// int short buttonState= 0;    // variable for reading the pushbutton status
+
+const uint8_t MCP23017_INTB = D3;  // connected to MCP23017 INTB (19) pin
+volatile bool switchDidChange = false;  // change status of MCP23017 input pins
 
 
 // SD card
