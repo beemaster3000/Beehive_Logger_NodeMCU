@@ -6,8 +6,8 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 
-const char *ssid = "MyESP8266AP";
-const char *password = "testpassword";
+const char *ssid = "Beemaster_3000";
+const char *password = "123456";
 
 ESP8266WebServer server(80);
 
@@ -18,7 +18,7 @@ ESP8266WebServer server(80);
  
 void handleRoot() 
 {
-  server.send(200, "text/html", "<h1>Hello from ESP8266 AP!</h1>");
+  server.send(200, "text/html", "<h1>Hello from Beemaster_3000!</h1>");
 }
  
 
