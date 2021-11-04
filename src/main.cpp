@@ -60,7 +60,7 @@ RTC_DS3231 rtc;
 
 // OLED display module
 DisplayOLED display;
-#define BUTTON_PIN 8        // the number of the pushbutton pin, GPA4 (28) of the MCP23017A Enable pin 
+#define BUTTON_PIN 8        // the number of the pushbutton pin, GPB0 (1) of the MCP23017A Enable pin 
 int short buttonState= 0;   // variable for reading the pushbutton status
 
 // SD card
@@ -197,8 +197,7 @@ void setup()
   //// OLED display module (welcome screen)
   display.setup();
   display.drawWelcomeScreen();
-  delay(int(2000));
-  display.clear();
+  delay(int(1500));
 
   //// RTC
   if (! rtc.begin()) 
@@ -301,6 +300,8 @@ void setup()
   Serial.print(F("kB of free RAM : "));
   Serial.println(ESP.getFreeHeap());
   // Serial.println(freeMemory());
+  
+  display.clear();
 }
 
 //===========================================================================================
@@ -310,6 +311,8 @@ void loop()
 {
   // Screen On Off subroutine (Main Screen)
   buttonState = mcp23017.digitalRead(BUTTON_PIN);
+  delay(10);
+
   if (buttonState==LOW)
   {
     DateTime now = rtc.now();
@@ -344,6 +347,7 @@ void loop()
     file.close();
     // Reset sample counter and averaging vectors
     nSamples=0;
+    battVolt_cumul= 0;
     recordNumber++;
     for(int short i=0; i<nSensor; i++)
     {
@@ -366,12 +370,18 @@ void loop()
     // Multiplexer activation and sensor reading
     for(int short i=0; i<nSensor; i++)
     {
+
+      // Switch Chanel to i
       channelControl(i);
-      mcp23017.digitalWrite(MX_EN_PIN, LOW); // enable mx chip
+      
+      // Enable mx chip
+      mcp23017.digitalWrite(MX_EN_PIN, LOW); 
+
       // Measure sensors
       T=dht.readTemperature();
       RH=dht.readHumidity();
 
+      // Send data to terminal
       printSensorData(i, T, RH);
 
       // Display data on OLED screen
@@ -389,7 +399,9 @@ void loop()
       RH_cumulTable[i]=RH_cumulTable[i]+RH;
 
       delay(subsample_delay); // wait for loopDelay ms
-      mcp23017.digitalWrite(MX_EN_PIN, HIGH); // enable mx chip
+
+      // Disable mx chip
+      // mcp23017.digitalWrite(MX_EN_PIN, HIGH); 
     }
     battVolt=analogRead(BATTVOLT_PIN)*((BATTVOLT_R1+BATTVOLT_R2)/BATTVOLT_R2)*(5.0/1023);
     battVolt_cumul=battVolt_cumul+battVolt;
