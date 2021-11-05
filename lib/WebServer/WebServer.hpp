@@ -1,5 +1,7 @@
 #pragma once
 #include <ESP8266WebServer.h>
+#include "page1.h"
+#include "page2.h"
 
 class WebServer  
 {
