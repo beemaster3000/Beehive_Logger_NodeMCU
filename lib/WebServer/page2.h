@@ -1,11 +1,10 @@
-const char htmlPage2[] PROGMEM = R"=====(
-<html>
-<head>
-    <title>Hello from HTTP Server ESP8266 - Page2</title>
-</head>
-
-<body>
-</body>
-
+const char htmlPage2[] PROGMEM =
+R"=====(
+<html> 
+  <head>   
+  </head>  
+   <body>    
+     <h1>Beemaster 3000 Page2</h1>
+    </body>  
 </html>
 )=====";
