@@ -11,6 +11,7 @@ public:
 	~WebServer();
 
 	static void handleRoot();
+	static void handlePage2();
 	static void handleClient();
 	static void setup();
 
