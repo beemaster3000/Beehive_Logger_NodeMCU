@@ -23,7 +23,7 @@ void WebServer::setup()
   Serial.println(WiFi.softAPmacAddress());
  
   server_.on("/", handleRoot);
-  server.on("/page2", handlePage2);
+  server_.on("/page2", handlePage2);
   server_.begin();
  
   Serial.println("Server listening"); 
