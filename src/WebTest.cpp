@@ -8,7 +8,7 @@
 #include "WebServer.hpp"
 
 const char *ssid = "Beemaster_3000";
-const char *password = "123456";
+const char *password = "12345678";
 
 //===========================================================================================
 // ------------------------------- program subfunctions start -------------------------------
