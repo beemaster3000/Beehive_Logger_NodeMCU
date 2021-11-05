@@ -1,6 +1,10 @@
 #include "WebServer.hpp"  
+
 ESP8266WebServer WebServer::server_= ESP8266WebServer(80);
-	
+int short connectionCounter
+
+
+
 WebServer::WebServer()
 {
 }
@@ -15,7 +19,7 @@ void WebServer::handleClient()
 }
 
 void WebServer::setup() 
-{  
+{
   Serial.println();
   Serial.print("Server IP address: ");
   Serial.println(WiFi.softAPIP());
