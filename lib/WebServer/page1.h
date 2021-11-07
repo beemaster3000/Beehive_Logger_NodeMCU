@@ -3,8 +3,9 @@ R"=====(
 <html> 
   <head>   
   </head>  
-   <body>    
-     <h1>Beemaster 3000 Page1</h1>
-    </body>  
+  <body>    
+    <h1>Beemaster 3000 Page1</h1>
+    <p>number of page loads: %i</p>
+  </body>  
 </html>
 )=====";

@@ -13,6 +13,7 @@ const char *ssid = "Beemaster_3000";
 const char *password = "12345678";
 
 ESP8266WebServer server(80);
+int short pageDisplayCounter;
 
 //===========================================================================================
 // ------------------------------- program subfunctions start -------------------------------
@@ -20,7 +21,10 @@ ESP8266WebServer server(80);
 
 void handleRoot() 
 {
-  server.send(200, "text/html", htmlPage1);
+  pageDisplayCounter++;
+  char charBuffer[1024];
+  sprintf(charBuffer,htmlPage1,pageDisplayCounter);
+  server.send(200, "text/html", charBuffer);
 }
 
 void handlePage2() 
@@ -34,6 +38,7 @@ void handlePage2()
 void setup() 
 {  
  Serial.begin(115200);
+ pageDisplayCounter=0;
   
   // pageDisplayCounter=0;
   WiFi.softAP(ssid, password);
