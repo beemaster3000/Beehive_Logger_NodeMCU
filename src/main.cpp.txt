@@ -171,7 +171,7 @@ void writeData(DateTime now, int nSamples,int recordNumber,float battVolt_cumul,
   file.println();
 }
 //------------------------------------------------------------------------------
-// dateTime for file siignature
+// dateTime for file signature
 void dateTime(uint16_t* date, uint16_t* time) 
 {
   DateTime now = rtc.now();
