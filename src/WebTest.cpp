@@ -27,6 +27,7 @@ SdFile root;
 #define error(msg) card.errorHalt(F(msg))
 #define FILE_BASE_NAME "Data"
 char fileName[13];
+char fileList[500]; //No specific size for now
 
 //===========================================================================================
 // ------------------------------- program subfunctions start -------------------------------
@@ -34,9 +35,27 @@ char fileName[13];
 
 void handleRoot() 
 {
+    // Open next file in root.
+  // Warning, openNext starts at the current directory position
+  // so a rewind of the directory may be required.
+  memset(fileList, '\0', sizeof(fileList));
+  char loop_Buffer[20];
+
+  // file.open("Data00.csv", O_RDONLY);
+  // file.close();
+  // card.vwd()->rewind();
+  while (file.openNext(&root, O_RDONLY)) 
+  {
+    file.getName(loop_Buffer, sizeof(loop_Buffer));
+    strcat(fileList,loop_Buffer);
+    strcat(fileList,"<br>" );
+    file.close();
+  }
+
+
   char charBuffer[1024];
   pageDisplayCounter++;
-  sprintf(charBuffer,htmlPage1,pageDisplayCounter);
+  sprintf(charBuffer,htmlPage1,fileList,pageDisplayCounter);
   server.send(200, "text/html", charBuffer);
 }
 
@@ -71,18 +90,6 @@ void setup()
 
   //// SD Card 
 
-// Wait for USB Serial 
-  while (!Serial) 
-  {
-    SysCall::yield();
-  }
-  
-  Serial.println("Type any character to start");
-  while (!Serial.available()) 
-  {
-    SysCall::yield();
-  }
-
   // Initialize at the highest speed supported by the board that is
   // not over 50 MHz. Try a lower speed if SPI errors occur.
   if (!card.begin(SD_CS_PIN, SD_SCK_MHZ(25))) 
@@ -93,29 +100,6 @@ void setup()
   {
     card.errorHalt("open root failed");
   }
-  // Open next file in root.
-  // Warning, openNext starts at the current directory position
-  // so a rewind of the directory may be required.
-  String fullString;
-  String charBuffer;
-  while (file.openNext(&root, O_RDONLY)) 
-  {
-    // charBuffer file.printFileSize();
-    // fullString += charBuffer;
-    fullString += ' ';
-    // charBuffer file.printModifyDateTime();
-    // fullString += charBuffer;
-    fullString += ' ';
-    // charBuffer file.printName();
-    // fullString += charBuffer;
-    fullString += ' ';
-    fullString += '\n';
-    file.close();
-  }
-  {
-    Serial.println(fullString);
-  }
-
 }
 
 //===========================================================================================
