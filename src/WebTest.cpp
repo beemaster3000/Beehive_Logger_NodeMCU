@@ -21,12 +21,11 @@ int short pageDisplayCounter;
 // SD card
 SdFat card;   // File system object.
 SdFile file;  // Log file.
-SdFile root;
 
 #define SD_CS_PIN D8 // SD chip select pin.
 #define error(msg) card.errorHalt(F(msg))
 #define FILE_BASE_NAME "Data"
-char fileName[13];
+char fileName[13] = "Data00.csv";
 char fileList[500]; //No specific size for now
 
 //===========================================================================================
@@ -38,21 +37,15 @@ void handleRoot()
     // Open next file in root.
   // Warning, openNext starts at the current directory position
   // so a rewind of the directory may be required.
-  memset(fileList, '\0', sizeof(fileList));
-  char loop_Buffer[20];
-
-  // file.open("Data00.csv", O_RDONLY);
-  // file.close();
-  // card.vwd()->rewind();
-  while (file.openNext(&root, O_RDONLY)) 
-  {
-    file.getName(loop_Buffer, sizeof(loop_Buffer));
-    strcat(fileList,loop_Buffer);
-    strcat(fileList,"<br>" );
-    file.close();
-  }
-
-
+  // memset(fileList, '\0', sizeof(fileList));
+  // char loop_Buffer[20];
+  // while (file.openNext(&root, O_RDONLY)) 
+  // {
+  //   file.getName(loop_Buffer, sizeof(loop_Buffer));
+  //   strcat(fileList,loop_Buffer);
+  //   strcat(fileList,"<br>" );
+  //   file.close();
+  // }
   char charBuffer[1024];
   pageDisplayCounter++;
   sprintf(charBuffer,htmlPage1,fileList,pageDisplayCounter);
@@ -92,6 +85,7 @@ void setup()
 
   // Initialize at the highest speed supported by the board that is
   // not over 50 MHz. Try a lower speed if SPI errors occur.
+  pinMode(SD_CS_PIN, OUTPUT);
   if (!card.begin(SD_CS_PIN, SD_SCK_MHZ(25))) 
   {
     card.initErrorHalt();
@@ -100,6 +94,32 @@ void setup()
   {
     card.errorHalt("open root failed");
   }
+  const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+  // Find an unused file name
+  while (card.exists(fileName)) {
+    if (fileName[BASE_NAME_SIZE + 1] != '9') 
+    {
+      fileName[BASE_NAME_SIZE + 1]++;
+    } else if (fileName[BASE_NAME_SIZE] != '9') 
+    {
+      fileName[BASE_NAME_SIZE + 1] = '0';
+      fileName[BASE_NAME_SIZE]++;
+    } else 
+    {
+      error("Can't create file name");
+    }
+  }
+  int fileNumebr;
+  fileNumebr=atoi(&(fileName[4]));
+
+  // char loop_Buffer[13];
+  // while (file.openNext(&root, O_RDONLY)) 
+  // {
+  //   file.getName(loop_Buffer, sizeof(loop_Buffer));
+  //   strcat(fileList,loop_Buffer);
+  //   strcat(fileList,"<br>" );
+  //   file.close();
+  // }
 }
 
 //===========================================================================================

@@ -271,9 +271,7 @@ void setup()
   //// SD Card 
 	pinMode(SD_CS_PIN, OUTPUT);
   #define error(msg) card.errorHalt(F(msg))
-	// card.begin(SD_CS_PIN, SPI_FULL_SPEED);
   card.begin(SD_CS_PIN, SD_SCK_MHZ(25));
-  // char fileName[13] = FILE_BASE_NAME "00.csv";
   const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
   // Find an unused file name
   while (card.exists(fileName)) {
