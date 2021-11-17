@@ -26,7 +26,8 @@ SdFile root;
 #define SD_CS_PIN D8 // SD chip select pin.
 #define error(msg) card.errorHalt(F(msg))
 #define FILE_BASE_NAME "Data"
-char fileName[11] = "Data00.csv";
+char fileName[11] = "Data04.csv";
+// char fileName[13] = "TESTFILE.txt";
 char fileList[500];
 
 
@@ -46,18 +47,23 @@ void handleRoot()
 void handleDataPage() 
 {
   Serial.println(fileName);
-  char buf[512];
-  FsFile fileStream = card.open(fileName, O_RDONLY);
-  size_t sizeStream = fileStream.size();
-  server.setContentLength(sizeStream);
-  server.send(200,"text/html", "");
-  while(sizeStream) 
+  if(card.exists(fileName)){
+    char buf[512];
+    FsFile fileStream = card.open(fileName, O_RDONLY);
+    size_t sizeStream = fileStream.size();
+    server.setContentLength(sizeStream);
+    server.send(200,"text/html", "");
+    while(sizeStream) 
+    {
+      size_t nread = fileStream.readBytes(buf, sizeof(buf));
+      server.client().write(buf, nread);
+      sizeStream -= nread;
+    }
+    fileStream.close();
+  }else
   {
-    size_t nread = fileStream.readBytes(buf, sizeof(buf));
-    server.client().write(buf, nread);
-    sizeStream -= nread;
+    server.send(200, "text/html", htmlPage2);
   }
-  fileStream.close();
 
   // server.send(200, "text/html", htmlPage2);
 }
@@ -84,31 +90,17 @@ void setup()
   {
     card.errorHalt("open root failed");
   }
-  const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
-  // Find an unused file name
-  while (card.exists(fileName)) {
-    if (fileName[BASE_NAME_SIZE + 1] != '9') 
-    {
-      fileName[BASE_NAME_SIZE + 1]++;
-    } else if (fileName[BASE_NAME_SIZE] != '9') 
-    {
-      fileName[BASE_NAME_SIZE + 1] = '0';
-      fileName[BASE_NAME_SIZE]++;
-    } else 
-    {
-      error("Can't create file name");
-    }
-  }
+
   memset(fileList, '\0', sizeof(fileList));
-  char loop_charBuffer[15];
-  while (file.openNext(&root, O_RDONLY)) 
-  {
-    file.getName(loop_charBuffer, sizeof(loop_charBuffer));
-    strcat(fileList,loop_charBuffer);
-    // insert creation date here using file.getCreateDateTime();
-    strcat(fileList,"<br>" );
-    file.close();
-  }
+  // char loop_charBuffer[15];
+  // while (file.openNext(&root, O_RDONLY)) 
+  // {
+  //   file.getName(loop_charBuffer, sizeof(loop_charBuffer));
+  //   strcat(fileList,loop_charBuffer);
+  //   // insert creation date here using file.getCreateDateTime();
+  //   strcat(fileList,"<br>" );
+  //   file.close();
+  // }
 
 
   //// Web Server
