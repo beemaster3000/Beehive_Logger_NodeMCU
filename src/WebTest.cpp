@@ -6,7 +6,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <SPI.h>
-#include <SdFat.h>
+#include <SD.h> 
 
 #include "page1.h"
 #include "page2.h"
@@ -19,12 +19,8 @@ ESP8266WebServer server(80);
 int short pageDisplayCounter;
 
 // SD card
-SdFat card;   // File system object.
-SdFile file;  // Log file.
-SdFile root;  
-
+File file;
 #define SD_CS_PIN D8 // SD chip select pin.
-#define error(msg) card.errorHalt(F(msg))
 #define FILE_BASE_NAME "Data"
 char fileName[11] = "Data04.csv";
 // char fileName[13] = "TESTFILE.txt";
@@ -36,6 +32,16 @@ char fileList[500];
 // ------------------------------- program subfunctions start -------------------------------
 //===========================================================================================
 
+void openReadFile()
+{
+  file = SD.open(fileName, FILE_READ);
+}
+
+void openWriteFile()
+{
+  file = SD.open(fileName, FILE_WRITE);
+}
+
 void handleRoot() 
 {
   char charBuffer[1024];
@@ -46,27 +52,21 @@ void handleRoot()
 
 void handleDataPage() 
 {
-  Serial.println(fileName);
-  if(card.exists(fileName)){
-    char buf[512];
-    FsFile fileStream = card.open(fileName, O_RDONLY);
-    size_t sizeStream = fileStream.size();
-    server.setContentLength(sizeStream);
-    server.send(200,"text/html", "");
-    while(sizeStream) 
-    {
-      size_t nread = fileStream.readBytes(buf, sizeof(buf));
-      server.client().write(buf, nread);
-      sizeStream -= nread;
-    }
-    fileStream.close();
-  }else
-  {
-    server.send(200, "text/html", htmlPage2);
-  }
+  openReadFile();
+  int SDfsize  = file.size();
+  server.sendHeader("Content-Length",(String)(SDfsize));
+  server.sendHeader("Cache-Control","max-age=2628000,public");
+  size_t fsizeSent = server.streamFile(file,"text/csv");
 
-  // server.send(200, "text/html", htmlPage2);
+  Serial.print("File Size: ");
+  Serial.println(SDfsize);
+  Serial.print("File Size sent: ");
+  Serial.println(fsizeSent);
+
+  file.close();
+  delay(100);
 }
+
 
   
 
@@ -78,29 +78,16 @@ void setup()
 {  
  Serial.begin(115200);
  pageDisplayCounter=0;
-  //// SD Card 
-  // Initialize at the highest speed supported by the board that is
-  // not over 50 MHz. Try a lower speed if SPI errors occur.
-  pinMode(SD_CS_PIN, OUTPUT);
-  if (!card.begin(SD_CS_PIN, SD_SCK_MHZ(25))) 
-  {
-    card.initErrorHalt();
-  }
-    if (!root.open("/")) 
-  {
-    card.errorHalt("open root failed");
-  }
 
-  memset(fileList, '\0', sizeof(fileList));
-  // char loop_charBuffer[15];
-  // while (file.openNext(&root, O_RDONLY)) 
-  // {
-  //   file.getName(loop_charBuffer, sizeof(loop_charBuffer));
-  //   strcat(fileList,loop_charBuffer);
-  //   // insert creation date here using file.getCreateDateTime();
-  //   strcat(fileList,"<br>" );
-  //   file.close();
-  // }
+  //// SD Card Initialization
+  Serial.println();
+  Serial.print("Initializing SD card...");
+  if (!SD.begin(SD_CS_PIN)) 
+  {
+    Serial.println("Card failed, or not present");
+  }
+  Serial.println("card initialized.");
+
 
 
   //// Web Server
@@ -133,20 +120,9 @@ void loop()
 // ------------------------------- Backup code start ----------------------------------------
 //===========================================================================================
 
-  //// Open next file in root.
-  //// Warning, openNext starts at the current directory position
-  //// so a rewind of the directory may be required.
-  // memset(fileList, '\0', sizeof(fileList));
-  // char loop_Buffer[20];
-  // while (file.openNext(&root, O_RDONLY)) 
-  // {
-  //   file.getName(loop_Buffer, sizeof(loop_Buffer));
-  //   strcat(fileList,loop_Buffer);
-  //   strcat(fileList,"<br>" );
-  //   file.close();
-  // }
 
-    // char fileList[(fileNumber+10)*sizeof(fileName)];
+
+  // char fileList[(fileNumber+10)*sizeof(fileName)];
   // char loop_Buffer[11];
   // memset(loop_Buffer, '\0', sizeof(loop_Buffer));
   // memset(fileList, '\0', sizeof(fileList));
@@ -159,3 +135,55 @@ void loop()
 
 
   // fileNumber=atoi(&(fileName[4]));
+
+
+
+  //   //// SD Card 
+  // // Initialize at the highest speed supported by the board that is
+  // // not over 50 MHz. Try a lower speed if SPI errors occur.
+  // pinMode(SD_CS_PIN, OUTPUT);
+  // if (!card.begin(SD_CS_PIN, SD_SCK_MHZ(25))) 
+  // {
+  //   card.initErrorHalt();
+  // }
+  //   if (!root.open("/")) 
+  // {
+  //   card.errorHalt("open root failed");
+  // }
+
+  // memset(fileList, '\0', sizeof(fileList));
+  // char loop_charBuffer[15];
+  // while (file.openNext(&root, O_RDONLY)) 
+  // {
+  //   file.getName(loop_charBuffer, sizeof(loop_charBuffer));
+  //   strcat(fileList,loop_charBuffer);
+  //   // insert creation date here using file.getCreateDateTime();
+  //   strcat(fileList,"<br>" );
+  //   file.close();
+  // }
+
+
+
+//   void handleDataPage() 
+// {
+//   Serial.println(fileName);
+//   if(card.exists(fileName)){
+//     char buf[512];
+//     FsFile fileStream = card.open(fileName, O_RDONLY);
+//     size_t sizeStream = fileStream.size();
+//     server.setContentLength(sizeStream);
+//     server.send(200,"text/html", "");
+//     while(sizeStream) 
+//     {
+//       size_t nread = fileStream.readBytes(buf, sizeof(buf));
+//       server.client().write(buf, nread);
+//       sizeStream -= nread;
+//     }
+//     fileStream.close();
+//   }else
+//   {
+//     server.send(200, "text/html", htmlPage2);
+//   }
+
+//   // server.send(200, "text/html", htmlPage2);
+// }

@@ -4,7 +4,7 @@ R"=====(
   <head>   
   </head>  
    <body>    
-     <h1>Beemaster 3000 Page2</h1>
+     <h1>Current file size: %i</h1>
     </body>  
 </html>
 )=====";
