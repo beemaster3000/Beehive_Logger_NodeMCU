@@ -7,19 +7,23 @@
 #include <ESP8266WebServer.h>
 #include <SPI.h>
 #include <SD.h> 
+// #include <sdFat.h> 
 
 #include "page1.h"
 #include "page2.h"
 
-
 const char *ssid = "Beemaster_3000";
 const char *password = "12345678";
-
+IPAddress local_IP(192,168,0,1);
+IPAddress gateway(192,168,0,1);
+IPAddress subnet(255,255,255,0);
 ESP8266WebServer server(80);
+
 int short pageDisplayCounter;
 
 // SD card
 File file;
+File root;
 #define SD_CS_PIN D8 // SD chip select pin.
 #define FILE_BASE_NAME "Data"
 char fileName[11] = "Data04.csv";
@@ -32,6 +36,39 @@ char fileList[500];
 // ------------------------------- program subfunctions start -------------------------------
 //===========================================================================================
 
+
+void printDirectory(File dir) 
+{
+  const char *buffName = entry.name();
+   while(true) 
+   {
+     File entry =  dir.openNextFile();
+     if (! entry) 
+      {
+        // no more files
+        // return to the first file in the directory
+        dir.rewindDirectory();
+        break;
+      }
+
+      // strcat(fileList,buffName);
+      // insert creation date here using file.getCreateDateTime();
+      // strcat(fileList,"<br>" );
+
+      char buff[32];
+      struct tm ts;
+      time_t epochTime = entry.getCreationTime();
+      ts = *localtime(&epochTime);
+      strftime(buff, sizeof(buff), "%Y-%m-%d %H:%M", &ts);
+      Serial.print(entry.name());
+      Serial.print("\t");
+      Serial.print(entry.size(), DEC);
+      Serial.print("\t");
+      Serial.println(buff);
+   }
+}
+
+
 void openReadFile()
 {
   file = SD.open(fileName, FILE_READ);
@@ -42,6 +79,10 @@ void openWriteFile()
   file = SD.open(fileName, FILE_WRITE);
 }
 
+void handleNotFound()
+{
+  server.send(404,"text/html",htmlPage2);
+}
 void handleRoot() 
 {
   char charBuffer[1024];
@@ -68,16 +109,13 @@ void handleDataPage()
 }
 
 
-  
-
-
 //===========================================================================================
 // ------------------------------- Initializing Arduino start -------------------------------
 //===========================================================================================
 void setup() 
 {  
- Serial.begin(115200);
- pageDisplayCounter=0;
+  Serial.begin(115200);
+  pageDisplayCounter=0;
 
   //// SD Card Initialization
   Serial.println();
@@ -88,11 +126,14 @@ void setup()
   }
   Serial.println("card initialized.");
 
-
+  root = SD.open("/");
+  printDirectory(root);
+  root.close();
 
   //// Web Server
+  WiFi.softAPConfig(local_IP, gateway, subnet);
   WiFi.softAP(ssid, password);
- 
+  
   Serial.println();
   Serial.print("Server IP address: ");
   Serial.println(WiFi.softAPIP());
@@ -101,11 +142,11 @@ void setup()
  
   server.on("/", handleRoot);
   server.on("/data", handleDataPage);
+  server.onNotFound(handleNotFound);
   server.begin();
  
   Serial.println("Server listening"); 
 
- 
 }
 
 //===========================================================================================
@@ -187,3 +228,14 @@ void loop()
 
 //   // server.send(200, "text/html", htmlPage2);
 // }
+
+
+
+  // //// SD Card Initialization (using SD.h Library)
+  // Serial.println();
+  // Serial.print("Initializing SD card...");
+  // if (!SD.begin(SD_CS_PIN)) 
+  // {
+  //   Serial.println("Card failed, or not present");
+  // }
+  // Serial.println("card initialized.");
