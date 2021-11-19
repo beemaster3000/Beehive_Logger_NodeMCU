@@ -73,7 +73,7 @@ int short buttonState= 0;   // variable for reading the pushbutton status
 File file;
 #define SD_CS_PIN D8 // SD chip select pin.
 #define FILE_BASE_NAME "Data"
-char fileName[11] = "Data05.csv";
+char fileName[11] = "Data00.csv";
 char fileNameWebServer[15]="/";
 char fileListHTML[1024];
 
@@ -378,30 +378,44 @@ void setup()
   nSamples=0; 
 
   //// SD Card 
+  sdfat::FsDateTime::setCallback(dateTime);
+  // SdFile::dateTimeCallback(dateTime);
   Serial.println();
   Serial.print("Initializing SD card...");
   if (!SD.begin(SD_CS_PIN)) 
   {
     Serial.println("Card failed, or not present");
+    exit(0);
   }
   Serial.println("card initialized.");
-  // Find an unused file name
-  const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
-  while (SD.exists(fileName)) {
-    if (fileName[BASE_NAME_SIZE + 1] != '9') {
-      fileName[BASE_NAME_SIZE + 1]++;
-    } else if (fileName[BASE_NAME_SIZE] != '9') {
-      fileName[BASE_NAME_SIZE + 1] = '0';
-      fileName[BASE_NAME_SIZE]++;
-    } else {
-      error("Can't create file name");
-    }
-  }
-  sdfat::FsDateTime::setCallback(dateTime);
+  
+  if (!SD.exists(fileName)){
   file = SD.open(fileName,FILE_WRITE );
-  if (!file)
+  writeHeader();  
+  }else{
+  file = SD.open(fileName,FILE_WRITE );
+  }
+  // Find an unused file name if base name is inaccessible
+  if(!file)
   {
-    Serial.println("Failed to open file");
+    const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+    while(!file)
+    { 
+      Serial.print("Failed to open ");
+      Serial.println(fileName);
+
+      if (fileName[BASE_NAME_SIZE + 1] != '9') {
+        fileName[BASE_NAME_SIZE + 1]++;
+      } else if (fileName[BASE_NAME_SIZE] != '9') {
+        fileName[BASE_NAME_SIZE + 1] = '0';
+        fileName[BASE_NAME_SIZE]++;
+      } else if (fileName[BASE_NAME_SIZE + 1]=='9'  &&  fileName[BASE_NAME_SIZE]=='9'){
+        Serial.println("Can't create or open file");
+        exit(0);
+      }
+      file = SD.open(fileName,FILE_WRITE );
+    }
+    writeHeader();
   }
   Serial.print(F("Logging to: "));
   Serial.println(fileName);
@@ -598,24 +612,3 @@ void loop()
 
 
 
-  //   file = SD.open(fileName,FILE_WRITE );
-  // if(!file)
-  // {
-  //   while(!file) // Find an unused file name if can't open current file name
-  //   { 
-  //     Serial.print("Failed to open ");
-  //     Serial.println(fileName);
-
-  //     if (fileName[BASE_NAME_SIZE + 1] != '9') {
-  //       fileName[BASE_NAME_SIZE + 1]++;
-  //     } else if (fileName[BASE_NAME_SIZE] != '9') {
-  //       fileName[BASE_NAME_SIZE + 1] = '0';
-  //       fileName[BASE_NAME_SIZE]++;
-  //     } else if (fileName[BASE_NAME_SIZE + 1]=='9'  &&  fileName[BASE_NAME_SIZE]=='9'){
-  //       Serial.println("Can't create or open file");
-  //       exit(0);
-  //     }
-  //     file = SD.open(fileName,FILE_WRITE );
-  //   }
-  //   writeHeader();
-  // }
