@@ -377,9 +377,9 @@ void setup()
   dht.begin();
   nSamples=0; 
 
-  //// SD Card 
-  sdfat::FsDateTime::setCallback(dateTime);
-  // SdFile::dateTimeCallback(dateTime);
+ //// SD Card 
+  
+  
   Serial.println();
   Serial.print("Initializing SD card...");
   if (!SD.begin(SD_CS_PIN)) 
@@ -388,6 +388,9 @@ void setup()
     exit(0);
   }
   Serial.println("card initialized.");
+
+  sdfat::FsDateTime::setCallback(dateTime);
+  // SdFile::dateTimeCallback(dateTime);
   
   if (!SD.exists(fileName)){
   file = SD.open(fileName,FILE_WRITE );
@@ -419,7 +422,6 @@ void setup()
   }
   Serial.print(F("Logging to: "));
   Serial.println(fileName);
-  // writeHeader();
   file.close();
   recordNumber=0;
 
@@ -610,5 +612,51 @@ void loop()
   //   digitalWrite(MX_CTRL_PIN[i], HIGH);   // set initial state as HIGH     
   // }
 
+
+//  //// SD Card 
+//   sdfat::FsDateTime::setCallback(dateTime);
+//   // SdFile::dateTimeCallback(dateTime);
+//   Serial.println();
+//   Serial.print("Initializing SD card...");
+//   if (!SD.begin(SD_CS_PIN)) 
+//   {
+//     Serial.println("Card failed, or not present");
+//     exit(0);
+//   }
+//   Serial.println("card initialized.");
+  
+//   if (!SD.exists(fileName)){
+//   file = SD.open(fileName,FILE_WRITE );
+//   writeHeader();  
+//   }else{
+//   file = SD.open(fileName,FILE_WRITE );
+//   }
+//   // Find an unused file name if base name is inaccessible
+//   if(!file)
+//   {
+//     const uint8_t BASE_NAME_SIZE = sizeof(FILE_BASE_NAME) - 1;
+//     while(!file)
+//     { 
+//       Serial.print("Failed to open ");
+//       Serial.println(fileName);
+
+//       if (fileName[BASE_NAME_SIZE + 1] != '9') {
+//         fileName[BASE_NAME_SIZE + 1]++;
+//       } else if (fileName[BASE_NAME_SIZE] != '9') {
+//         fileName[BASE_NAME_SIZE + 1] = '0';
+//         fileName[BASE_NAME_SIZE]++;
+//       } else if (fileName[BASE_NAME_SIZE + 1]=='9'  &&  fileName[BASE_NAME_SIZE]=='9'){
+//         Serial.println("Can't create or open file");
+//         exit(0);
+//       }
+//       file = SD.open(fileName,FILE_WRITE );
+//     }
+//     writeHeader();
+//   }
+//   Serial.print(F("Logging to: "));
+//   Serial.println(fileName);
+//   // writeHeader();
+//   file.close();
+//   recordNumber=0;
 
 
