@@ -11,6 +11,7 @@
 
 #include "page1.h"
 #include "page2.h"
+#include "page3.h"
 
 const char *ssid = "Beemaster_3000";
 const char *password = "12345678";
@@ -65,9 +66,12 @@ void getFileList(File dir)
       time_t epochTimeCreate = entry.getCreationTime();
       time_t epochTimeWrite = entry.getLastWrite();
       // create file list
-      strcat(fileListHTML,"<tr><td><a href=/" );
-      strcat(fileListHTML,entry.name());
-      strcat(fileListHTML,">" );
+
+      // strcat(fileListHTML,"<tr><td><a href=/" );
+      // strcat(fileListHTML,entry.name());
+      // strcat(fileListHTML,">" );
+      
+      strcat(fileListHTML,"<tr><td><a href=""/GetData"">");
       strcat(fileListHTML,entry.name());
       strcat(fileListHTML,"</a></td><td>");
       strcat(fileListHTML,BuffSize);
@@ -87,6 +91,7 @@ void getFileList(File dir)
       // Serial.print("\t");
       // Serial.println(buffTime);
    }
+
 }
 
 void handleNotFound()
@@ -129,6 +134,10 @@ void createStreamData()
 {
   handleNotFound();
 }
+void handleLivePage()
+{
+  server.send(200, "text/html", htmlPage3);
+}
 
 //===========================================================================================
 // ------------------------------- Initializing Arduino start -------------------------------
@@ -164,6 +173,7 @@ void setup()
   server.on("/", handleRoot);
   server.on(fileNameWebServer, handleDataPage);
   server.on("/GetData", createStreamData);
+  server.on("/GetLiveData",handleLivePage);
   server.onNotFound(handleNotFound);
   server.begin();
 
