@@ -1,0 +1,6 @@
+List of things left to do in order of importance. Will add more to it undoubtedly.
+
+1- Create live data view HTML page1
+2- find a way to view older files by clicking on data file name hyperlink on main page1
+3- display splash screen when switch is turned on
+4- Create and display BEEMASTER3000 DELUXE jpg on main page
