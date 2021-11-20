@@ -28,8 +28,8 @@
 #define nSensor 11                 // Number of T/RH sensors to sample from
 #define subsample_delay 2000       // Delay between each RTC sensors reading in ms
 #define BATTVOLT_PIN A0            // Analog pin used to measure battery voltage divider from 12v battery to analog input (R1+R2)/R2
-#define BATTVOLT_R1 9.79           // Value of R1 in kohm recorded with voltmeter (9.79 original val)
-#define BATTVOLT_R2 0.984          // Value of R2 in kohm recorded with voltmeter (0.981 original val)
+#define BATTVOLT_R1 14.29           // Value of R1 in kohm recorded with voltmeter (9.79 original val)
+#define BATTVOLT_R2 1.479          // Value of R2 in kohm recorded with voltmeter (0.981 original val)
 float T;                           // Variable containing Temperature (degC) sensor readings each loop
 float T_cumulTable[nSensor];       // Table containing cumulative Temperature (degC) sensor readings for averageing interval
 float RH;                          // Variable containing Relative Humidity (%) in current loop
@@ -552,14 +552,13 @@ void loop()
       RH_cumulTable[i]=RH_cumulTable[i]+RH;
 
       delay(subsample_delay); // wait for loopDelay ms
-
-      // Disable mx chip
-      // mcp23017.digitalWrite(MX_EN_PIN, HIGH); 
     }
-    battVolt=analogRead(BATTVOLT_PIN)*((BATTVOLT_R1+BATTVOLT_R2)/BATTVOLT_R2)*(5.0/1023);
+    // ADC Voltage range in ESP8266 development boards: 0 to 3.3V
+    // The ADC pin has a 10-bit resolution, which means you’ll get values between 0 and 1023.
+    // Vout=Vin*(R2/(R1+R2)) -> Vin=Vout*(R1+R2)/R2 * (3.3/1023)
+    battVolt=analogRead(BATTVOLT_PIN)*((BATTVOLT_R1+BATTVOLT_R2)/BATTVOLT_R2)*(3.3/1023);
     battVolt_cumul=battVolt_cumul+battVolt;
     nSamples++;
-    // display.clear();
   }
 }
 //===========================================================================================
