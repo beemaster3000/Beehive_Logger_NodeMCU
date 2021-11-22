@@ -284,9 +284,28 @@ void createStreamData()
 {
   handleNotFound();
 }
-void handleLivePage()
+void handleLivePage(DateTime now, int nSamples,float battVolt_cumul, float T_cumulTable[nSensor], float RH_cumulTable[nSensor])
 {
-  server.send(200, "text/html", htmlPage3);
+  char charBuffer[2048];
+  char tableBuffer[1024];
+  char dateBuff[] = "YYYY-MM-DD hh:mm:ss";
+  char intBuff[3];
+  // now.toString(buff);
+  for (uint8_t i = 0; i < nSensor; i++)
+  {
+    strcat(tableBuffer,"<tr><td>");
+    itoa (i,intBuff,3);
+    strcat(tableBuffer,intBuff);
+    strcat(tableBuffer,"</td><td>");
+    fptoa(T_cumulTable[i]/nSamples,intBuff,3);
+    strcat(tableBuffer,intBuff);
+    strcat(tableBuffer,"</td><td>");
+    fptoa(T_cumulTable[i]/nSamples,intBuff,3);
+    strcat(tableBuffer,intBuff);
+    strcat(tableBuffer,"</td></tr>");
+  }
+  sprintf(charBuffer,htmlPage3,now.toString(dateBuff),tableBuffer);
+  server.send(200, "text/html", charBuffer);
 }
 
 //===========================================================================================
