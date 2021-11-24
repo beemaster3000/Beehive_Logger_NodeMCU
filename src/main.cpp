@@ -75,7 +75,7 @@ File file;
 #define FILE_BASE_NAME "Data"
 char fileName[11] = "Data00.csv";
 char fileNameWebServer[15]="/";
-char fileListHTML[1024];
+char HTMLtableBuffer[1024];
 
 // WebServer
 const char *ssid = "Beemaster_3000";
@@ -202,7 +202,7 @@ void dateTime(uint16_t* date, uint16_t* time)
 // WebServer
 void getFileList(File dir) 
 {
-  memset(fileListHTML, '\0', sizeof(fileListHTML));
+  memset(HTMLtableBuffer, '\0', sizeof(HTMLtableBuffer));
   filesInCard=0;
   dir.rewindDirectory();
    while(true) 
@@ -226,23 +226,23 @@ void getFileList(File dir)
       time_t epochTimeWrite = entry.getLastWrite();
       // create file list
 
-      // strcat(fileListHTML,"<tr><td><a href=/" );
-      // strcat(fileListHTML,entry.name());
-      // strcat(fileListHTML,">" );
+      // strcat(HTMLtableBuffer,"<tr><td><a href=/" );
+      // strcat(HTMLtableBuffer,entry.name());
+      // strcat(HTMLtableBuffer,">" );
       
-      strcat(fileListHTML,"<tr><td><a href=""/GetData"">");
-      strcat(fileListHTML,entry.name());
-      strcat(fileListHTML,"</a></td><td>");
-      strcat(fileListHTML,BuffSize);
-      strcat(fileListHTML,"</td><td>");
+      strcat(HTMLtableBuffer,"<tr><td><a href=""/GetData"">");
+      strcat(HTMLtableBuffer,entry.name());
+      strcat(HTMLtableBuffer,"</a></td><td>");
+      strcat(HTMLtableBuffer,BuffSize);
+      strcat(HTMLtableBuffer,"</td><td>");
       ts = *localtime(&epochTimeCreate);
       strftime(buffTime, sizeof(buffTime), "%Y-%m-%d %H:%M", &ts);
-      strcat(fileListHTML,buffTime);
-      strcat(fileListHTML,"</td><td>");
+      strcat(HTMLtableBuffer,buffTime);
+      strcat(HTMLtableBuffer,"</td><td>");
       ts = *localtime(&epochTimeWrite);
       strftime(buffTime, sizeof(buffTime), "%Y-%m-%d %H:%M", &ts);
-      strcat(fileListHTML,buffTime);
-      strcat(fileListHTML,"</td></tr>");
+      strcat(HTMLtableBuffer,buffTime);
+      strcat(HTMLtableBuffer,"</td></tr>");
       //// print to terminal for debug
       // Serial.print(entry.name());
       // Serial.print("\t");
@@ -264,7 +264,7 @@ void handleRoot()
   root.close();
   char charBuffer[2048];
   pageDisplayCounter++;
-  sprintf(charBuffer,htmlPage1,fileName,fileName,fileListHTML,pageDisplayCounter);
+  sprintf(charBuffer,htmlPage1,fileName,fileName,HTMLtableBuffer,pageDisplayCounter);
   server.send(200, "text/html", charBuffer);
 }
 
@@ -284,27 +284,30 @@ void createStreamData()
 {
   handleNotFound();
 }
-void handleLivePage(DateTime now, int nSamples,float battVolt_cumul, float T_cumulTable[nSensor], float RH_cumulTable[nSensor])
+
+void handleLivePage()
 {
   char charBuffer[2048];
-  char tableBuffer[1024];
-  char dateBuff[] = "YYYY-MM-DD hh:mm:ss";
-  char intBuff[3];
-  // now.toString(buff);
-  for (uint8_t i = 0; i < nSensor; i++)
-  {
-    strcat(tableBuffer,"<tr><td>");
-    itoa (i,intBuff,3);
-    strcat(tableBuffer,intBuff);
-    strcat(tableBuffer,"</td><td>");
-    fptoa(T_cumulTable[i]/nSamples,intBuff,3);
-    strcat(tableBuffer,intBuff);
-    strcat(tableBuffer,"</td><td>");
-    fptoa(T_cumulTable[i]/nSamples,intBuff,3);
-    strcat(tableBuffer,intBuff);
-    strcat(tableBuffer,"</td></tr>");
-  }
-  sprintf(charBuffer,htmlPage3,now.toString(dateBuff),tableBuffer);
+  // char tableBuffer[1536];
+  memset(charBuffer,  '\0', sizeof(charBuffer));
+  memset(HTMLtableBuffer, '\0', sizeof(HTMLtableBuffer));
+  char numBuff[4];
+
+  // for (uint8_t k = 0; k < nSensor; k++)
+  // {
+    strcat(HTMLtableBuffer,"<tr><td>");
+    itoa (k+1,numBuff,4);
+    strcat(HTMLtableBuffer,numBuff);
+    strcat(HTMLtableBuffer,"</td><td>");
+  //   dtostrf(T_cumulTable[k]/nSamples,4,1,numBuff);
+  //   strcat(HTMLtableBuffer,numBuff);
+    strcat(HTMLtableBuffer,"</td><td>test5");
+  //   dtostrf(RH_cumulTable[k]/nSamples,4,1,numBuff);
+  //   strcat(HTMLtableBuffer,numBuff);
+    strcat(HTMLtableBuffer,"</td></tr>");
+  // }
+  sprintf(charBuffer,htmlPage3,HTMLtableBuffer);
+  // sprintf(charBuffer,htmlPage3,tableBuffer);
   server.send(200, "text/html", charBuffer);
 }
 
@@ -340,7 +343,9 @@ void setup()
 	  // Comment out below lines once you set the date & time.
     // Following line sets the RTC to the date & time this sketch was compiled
     rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    // rtc.adjust(DateTime(2021, 11, 22, 22, 50, 0));
   }
+
   //// Disable and clear both alarms
   rtc.disableAlarm(1);
   rtc.disableAlarm(2);

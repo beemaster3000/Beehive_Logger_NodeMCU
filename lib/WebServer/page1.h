@@ -1,8 +1,8 @@
 const char htmlPage1[] PROGMEM = 
 R"=====(
 <html> 
-  <head>   
-  </head>  
+  <head>
+  </head>
   <body>    
     <h1>Beemaster 3000 HOME</h1>
     <p><a href="/%s"> Click here to download the latest data file: %s</a></p>
