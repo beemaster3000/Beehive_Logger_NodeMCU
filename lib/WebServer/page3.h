@@ -2,14 +2,29 @@ const char htmlPage3[] PROGMEM =
 R"=====(
 <html> 
   <head>   
-  </head>  
+  </head>
+  <style>
+  table, th, td 
+  {
+    border-collapse: collapse;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+    text-align: center
+  }
+  tr:nth-child(even) 
+  {
+    background-color: #dcdcdc;
+  }
+  </style>
   <body>    
     <h1>Sensor Live Data</h1>
     <table>
       <tr>
-        <td>Sensor Number &emsp;&emsp;</td>
-        <td>Temperature [deg C] &emsp;&emsp;</td>
-        <td>Relative Humidity</td>
+        <th>Sensor Number</th>
+        <th>Temperature [deg C]</th>
+        <th>Relative Humidity [%%]</th>
       </tr>
       %s
     </table>
@@ -17,18 +32,6 @@ R"=====(
   </body>  
 </html>
 )=====";
-
-
-
-// <table>
-//   <tr>
-//     <td>Sensor Number &emsp;</td>
-//     <td>Temperature (deg C)&emsp;</td>
-//     <td>Relative Humidity (%%)&emsp;</td>
-//   </tr>
-//   %s
-// </table>
-// <td>Relative Humidity [%%]</td>
 
 
 // <p> Last Update: %s</p>

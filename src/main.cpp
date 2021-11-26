@@ -25,7 +25,7 @@
 // General
 #define logging_interval 5         // logging interval (averaging period) in mins
 #define sampeling_interval 30      // sampeling period in s (CAN NOT BE LESS THAN (nsensors)+1*2sec)
-#define nSensor 11                 // Number of T/RH sensors to sample from
+#define nSensor 13                 // Number of T/RH sensors to sample from
 #define subsample_delay 2000       // Delay between each RTC sensors reading in ms
 #define BATTVOLT_PIN A0            // Analog pin used to measure battery voltage divider from 12v battery to analog input (R1+R2)/R2
 #define BATTVOLT_R1 14.29           // Value of R1 in kohm recorded with voltmeter (9.79 original val)
@@ -288,26 +288,35 @@ void createStreamData()
 void handleLivePage()
 {
   char charBuffer[2048];
-  // char tableBuffer[1536];
   memset(charBuffer,  '\0', sizeof(charBuffer));
   memset(HTMLtableBuffer, '\0', sizeof(HTMLtableBuffer));
   char numBuff[4];
-
-  // for (uint8_t k = 0; k < nSensor; k++)
-  // {
+  for (uint8_t k = 0; k < nSensor; k++)
+  {
     strcat(HTMLtableBuffer,"<tr><td>");
-    itoa (k+1,numBuff,4);
+    itoa (k+1,numBuff,10);
     strcat(HTMLtableBuffer,numBuff);
     strcat(HTMLtableBuffer,"</td><td>");
-  //   dtostrf(T_cumulTable[k]/nSamples,4,1,numBuff);
-  //   strcat(HTMLtableBuffer,numBuff);
-    strcat(HTMLtableBuffer,"</td><td>test5");
-  //   dtostrf(RH_cumulTable[k]/nSamples,4,1,numBuff);
-  //   strcat(HTMLtableBuffer,numBuff);
+    if (T_cumulTable[k])
+    {
+      dtostrf(T_cumulTable[k]/nSamples,4,1,numBuff);
+      strcat(HTMLtableBuffer,numBuff);
+    }else
+    {
+      strcat(HTMLtableBuffer," NaN ");
+    }
+    strcat(HTMLtableBuffer,"</td><td>");
+    if (RH_cumulTable[k])
+    {
+      dtostrf(RH_cumulTable[k]/nSamples,4,1,numBuff);
+      strcat(HTMLtableBuffer,numBuff);
+    }else
+    {
+      strcat(HTMLtableBuffer," NaN ");
+    }
     strcat(HTMLtableBuffer,"</td></tr>");
-  // }
+  }
   sprintf(charBuffer,htmlPage3,HTMLtableBuffer);
-  // sprintf(charBuffer,htmlPage3,tableBuffer);
   server.send(200, "text/html", charBuffer);
 }
 
