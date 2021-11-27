@@ -1,7 +1,8 @@
 const char htmlPage3[] PROGMEM =
 R"=====(
 <html> 
-  <head>   
+  <head>
+    <meta http-equiv="refresh" content="60"> 
   </head>
   <style>
   table, th, td 

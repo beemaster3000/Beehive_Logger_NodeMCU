@@ -226,11 +226,11 @@ void getFileList(File dir)
       time_t epochTimeWrite = entry.getLastWrite();
       // create file list
 
-      // strcat(HTMLtableBuffer,"<tr><td><a href=/" );
-      // strcat(HTMLtableBuffer,entry.name());
-      // strcat(HTMLtableBuffer,">" );
+      strcat(HTMLtableBuffer,"<tr><td><a href=/" );
+      strcat(HTMLtableBuffer,entry.name());
+      strcat(HTMLtableBuffer,">" );
       
-      strcat(HTMLtableBuffer,"<tr><td><a href=""/GetData"">");
+      // strcat(HTMLtableBuffer,"<tr><td><a href=""/GetData"">");
       strcat(HTMLtableBuffer,entry.name());
       strcat(HTMLtableBuffer,"</a></td><td>");
       strcat(HTMLtableBuffer,BuffSize);
@@ -287,7 +287,9 @@ void createStreamData()
 
 void handleLivePage()
 {
+  // char *charBuffer = new char[10048]; // also uncomment delete at the end
   char charBuffer[2048];
+
   memset(charBuffer,  '\0', sizeof(charBuffer));
   memset(HTMLtableBuffer, '\0', sizeof(HTMLtableBuffer));
   char numBuff[4];
@@ -318,6 +320,7 @@ void handleLivePage()
   }
   sprintf(charBuffer,htmlPage3,HTMLtableBuffer);
   server.send(200, "text/html", charBuffer);
+  // delete [] charBuffer;
 }
 
 //===========================================================================================
@@ -583,8 +586,8 @@ void loop()
       // Add values to cumulative arrays
       T_cumulTable[i]=T_cumulTable[i]+T;
       RH_cumulTable[i]=RH_cumulTable[i]+RH;
-
-      delay(subsample_delay); // wait for loopDelay ms
+      server.handleClient();
+      delay(subsample_delay); 
     }
     // ADC Voltage range in ESP8266 development boards: 0 to 3.3V
     // The ADC pin has a 10-bit resolution, which means you’ll get values between 0 and 1023.
