@@ -258,14 +258,16 @@ void handleNotFound()
 }
 void handleRoot() 
 {
+  char *charBuffer = new char[5000]; // also uncomment delete at the end
+  // char charBuffer[2048];
   File root;
   root = SD.open("/");
   getFileList(root);
   root.close();
-  char charBuffer[2048];
   pageDisplayCounter++;
   sprintf(charBuffer,htmlPage1,fileName,fileName,HTMLtableBuffer,pageDisplayCounter);
   server.send(200, "text/html", charBuffer);
+  delete [] charBuffer;
 }
 
 void handleDataPage() 
@@ -501,7 +503,6 @@ void loop()
   // Screen On Off subroutine (Main Screen)
   buttonState = mcp23017.digitalRead(BUTTON_PIN);
   delay(10);
-
   if (buttonState==LOW)
   {
     DateTime now = rtc.now();
@@ -586,8 +587,13 @@ void loop()
       // Add values to cumulative arrays
       T_cumulTable[i]=T_cumulTable[i]+T;
       RH_cumulTable[i]=RH_cumulTable[i]+RH;
-      server.handleClient();
-      delay(subsample_delay); 
+      
+      for(int short i=0; i<20; i++)
+      {
+        server.handleClient();
+        delay(subsample_delay/20); 
+      }
+      
     }
     // ADC Voltage range in ESP8266 development boards: 0 to 3.3V
     // The ADC pin has a 10-bit resolution, which means you’ll get values between 0 and 1023.
