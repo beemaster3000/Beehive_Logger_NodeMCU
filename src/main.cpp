@@ -66,8 +66,9 @@ RTC_DS3231 rtc;
 
 // OLED display module
 DisplayOLED display;
-#define BUTTON_PIN 8        // the number of the pushbutton pin, GPB0 (1) of the MCP23017A Enable pin 
-int short buttonState= 0;   // variable for reading the pushbutton status
+#define BUTTON_PIN 8                // the number of the pushbutton pin, GPB0 (1) of the MCP23017A Enable pin 
+int short buttonState= 0;           // variable for reading the pushbutton status
+int short buttonPreviousState= 0;   // variable for the pushbutton's last status
 
 // SD card
 File file;
@@ -408,16 +409,15 @@ void setup()
   }
   
   //// multiplexer
-  configuremcp23017Pins(); 
+  configuremcp23017Pins();
   mcp23017.digitalWrite(MX_EN_PIN, HIGH); // Disable mx chip
+  buttonPreviousState=mcp23017.digitalRead(BUTTON_PIN); // initialise button previous state for loop()
 
   //// TRH sensor
   dht.begin();
   nSamples=0; 
 
  //// SD Card 
-  
-  
   Serial.println();
   Serial.print("Initializing SD card...");
   if (!SD.begin(SD_CS_PIN)) 
@@ -503,15 +503,24 @@ void loop()
   // Screen On Off subroutine (Main Screen)
   buttonState = mcp23017.digitalRead(BUTTON_PIN);
   delay(10);
+
   if (buttonState==LOW)
   {
-    DateTime now = rtc.now();
-    char buff[] = "YYYY-MM-DD hh:mm:ss";
-    display.printMainPage(fileName,battVolt,now.toString(buff));
+    if (buttonState==buttonPreviousState)
+    {
+      DateTime now = rtc.now();
+      char buff[] = "YYYY-MM-DD hh:mm:ss";
+      display.printMainPage(fileName,battVolt,now.toString(buff));\
+    }else
+    {
+      display.drawWelcomeScreen();
+      delay(1000);
+    }
   }
   else{
     display.clear();
   }
+  buttonPreviousState=buttonState;
   
   // Sample and log alarm control
   if (rtc.alarmFired(2) == true)
@@ -578,11 +587,18 @@ void loop()
       buttonState = mcp23017.digitalRead(BUTTON_PIN);
       if (buttonState==LOW)
       {
-        display.printTRHvalues(i+1,T,RH);
+        if (buttonState==buttonPreviousState)
+        {
+          display.printTRHvalues(i+1,T,RH);
+        }else
+        {
+          display.drawWelcomeScreen();
+        }
       }
       else{
         display.clear();
       }
+      buttonPreviousState=buttonState;
       
       // Add values to cumulative arrays
       T_cumulTable[i]=T_cumulTable[i]+T;
